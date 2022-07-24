@@ -1,7 +1,7 @@
 # PerturbNet
 PerturbNet is a deep generative model that can predict the distribution of cell states induced by chemical or genetic perturbation
 
-We adapted code of conditional invertible neural network (cINN) from [net2net](https://github.com/CompVis/net2net). 
+We adapted code of conditional invertible neural network (cINN) from [net2net](https://github.com/CompVis/net2net)...
 
 
 # Reference
