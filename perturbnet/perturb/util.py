@@ -26,6 +26,9 @@ from sklearn.preprocessing import label_binarize
 
 
 class NormalizedRSquare:
+	"""
+	calculate R squared metric for count data
+	"""
 
 	def __init__(self, largeCountData):
 		self.calculate_largeData(largeCountData)
@@ -71,6 +74,9 @@ class NormalizedRSquare:
 		return r_value ** 2
 
 class NormalizedRevisionRSquare:
+	"""
+	calculate R squared metric for count data following the scanpy processing procedures
+	"""
 
 	def __init__(self, largeCountData, targetSize = 1e4):
 		
@@ -108,6 +114,9 @@ class NormalizedRevisionRSquare:
 
 
 class NormalizedRevisionRSquareLoad:
+	"""
+	calculate R squared metric for count data with known large data means and stds
+	"""
 
 	def __init__(self,  col_mu, col_std, targetSize = 1e4):
 		
@@ -138,6 +147,9 @@ class NormalizedRevisionRSquareLoad:
 		return r_value ** 2, real_data_norm, fake_data_norm
 
 class NormalizedRevisionRSquareVar:
+	"""
+	calculate R squared metric based on variance of gene expressions for count data
+	"""
 
 	def __init__(self, norm_model):
 		self.norm_model = norm_model
@@ -165,6 +177,9 @@ class NormalizedRevisionRSquareVar:
 		return r_value ** 2, real_data_norm, fake_data_norm
 
 class fidscore:
+	"""
+	calculate FID score metric 
+	"""
 
 	def __init__(self):
 		super().__init__()
@@ -238,6 +253,9 @@ class fidscore:
 
 
 class fidscore_scvi_extend(fidscore):
+	"""
+	calculate FID score metric defined on the scVI latent space
+	"""
 
 	def __init__(self, scvi_model):
 		super().__init__()
@@ -306,6 +324,9 @@ class fidscore_scvi_extend(fidscore):
 
 
 class fidscore_scgen_extend(fidscore):
+	"""
+	calculate FID score metric defined on the scGen latent space
+	"""
 
 	def __init__(self, scgen_model):
 		super().__init__()
@@ -332,6 +353,9 @@ class fidscore_scgen_extend(fidscore):
 		return fid_value, image_error
 
 class fidscore_vae_extend(fidscore):
+	"""
+	calculate FID score metric defined on the regular VAE latent space
+	"""
 
 	def __init__(self, sess, z_gen_data_v, z_gen_mean_v, X_v, is_training):
 		super().__init__()
@@ -399,6 +423,9 @@ class fidscore_vae_extend(fidscore):
 
 
 class RandomForestError:
+	"""
+	calculate random forest error metric 
+	"""
 
 	def __init__(self, n_folds = 5):
 		super().__init__()
@@ -633,6 +660,9 @@ class RandomForestError:
 
 
 class LogisticRegError:
+	"""
+	calculate logistic regression error metric 
+	"""
 
 	def __init__(self, n_folds=5):
 		super().__init__()
@@ -866,7 +896,10 @@ class LogisticRegError:
 
 
 class Standardize:
-	
+	"""
+	standardize latent space
+	"""
+
 	def __init__(self, data_all, model, device):
 
 		self.onehot_data = self.random_select(data_all)
@@ -905,6 +938,9 @@ class Standardize:
 
 
 class StandardizeLoad:
+	"""
+	standardize latent space with known global means and stds
+	"""
 	def __init__(self, mu, std, device):
 		self.mu = mu
 		self.std = std
@@ -918,6 +954,9 @@ class StandardizeLoad:
 
 
 class ConcatDatasetWithIndices(torch.utils.data.Dataset):
+	"""
+	data structure with sample indices of two datasets
+	"""
 
 	def __init__(self, *datasets):
 		self.datasets = datasets
