@@ -1,6 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
 import os
 import random
 import pandas as pd
@@ -14,6 +13,9 @@ import torch.optim as optim
 import time
 
 def vae_loss(x_decoded_mean, x, z_mean, z_logvar):
+	"""
+	ELBO loss of VAE
+	"""
 
 	xent_loss = F.binary_cross_entropy(x_decoded_mean, x, size_average = False)
 	kl_loss = -0.5 * torch.sum(torch.sum(1 + z_logvar - z_mean.pow(2) - z_logvar.exp(), 1))
@@ -243,7 +245,7 @@ class ChemicalVAETrain:
 class ChemicalVAEFineTuneZLZ:
 
 	"""
-	training module for ChemicalVAE with regularization with Laplacian matrix L
+	training module for ChemicalVAE with regularization on the Laplacian matrix L
 	"""
 	def __init__(self, chemvae_model, Lmatrix, perturbToOnehot, data_tune_onehot, device):
 
