@@ -8,55 +8,47 @@ import numpy as np
 import pandas as pd
 
 from sklearn.neighbors import NearestNeighbors
-from perturbnet.perturb.util import *
-from perturbnet.perturb.chemicalvae.chemicalVAE import *
-from perturbnet.perturb.data_vae.modules.vae import *
+from perturbnet.drug_perturb.util import *
+from perturbnet.genetic_perturb.genotypevae.genotypeVAE import *
+from perturbnet.drug_perturb.data_vae.modules.vae import *
 
 if __name__ == "__main__":
     # (1) load data
     ## directories
-    path_save = "FIDDistances_LINCS"
+    path_save = 'FIDDistances_LINCS'
     if not os.path.exists(path_save):
         os.makedirs(path_save, exist_ok=True)
 
     path_data = ""
-    path_chemvae_model = ""
+    path_genovae_model = ""
     path_vae_model_eval = ""
-    path_lincs_onehot = os.path.join(path_data + "oneHot/", "GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_UniqueCanonicalSmilesOneHot.npy")
-    path_std_param = ""
+    path_lincs_onehot = ""
 
     usedata = np.load(os.path.join(path_data, "GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed.npy"))
 
     ## meta information
     input_ltpm_label = pd.read_csv(
-        os.path.join(path_data, "GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_PerturbMeta.csv"))
-    perturb_with_onehot_overall = np.array(list(input_ltpm_label["canonical_smiles"]))
+        os.path.join(path_data, 'GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_PerturbMeta.csv'))
+    perturb_with_onehot_overall = np.array(list(input_ltpm_label['pert_iname']))
 
     ## onehot
     data_lincs_onehot = np.load(path_lincs_onehot)
-    trt_list = np.load(os.path.join(path_data + "oneHot/", "GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_UniqueCanonicalSmilesOneHotSmiles.npy"))
+    trt_list = np.load(os.path.join(path_data, 'UniqueGenePerturbGene.npy'), allow_pickle=True)
 
     # evaluation vae
     vae = VAE(num_cells_train = usedata.shape[0], x_dimension = usedata.shape[1], learning_rate = 1e-4, BNTrainingMode = False)
     vae.restore_model(path_vae_model_eval)
 
     # (2) load models
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    ## ChemicalVAE
-    model_chemvae = ChemicalVAE(n_char = data_lincs_onehot.shape[2], 
-                                max_len = data_lincs_onehot.shape[1]).to(device)
-    model_chemvae.load_state_dict(torch.load(path_chemvae_model, map_location=device))
-    model_chemvae.eval()
+    ## GenotypeVAE
+    model_genovae = GenotypeVAE().to(device)
+    model_genovae.load_state_dict(torch.load(path_genovae_model, map_location=device))
+    model_genovae.eval()
 
-    ## standardization model
-    mu_std_model = np.load(os.path.join(path_std_param, "mu.npy"))
-    std_std_model = np.load(os.path.join(path_std_param, "std.npy"))
-    std_model = StandardizeLoad(mu_std_model, std_std_model, device)
-
-    ## latent values of perturbations
-    _, _, _, embdata_torch = model_chemvae(torch.tensor(data_lincs_onehot).float().to(device))
-    embdata_numpy = std_model.standardize_z(embdata_torch.cpu().detach().numpy())
+    _, _, _, embdata_torch = model_genovae(torch.tensor(data_lincs_onehot).float().to(device))
+    embdata_numpy = embdata_torch.cpu().detach().numpy()
 
     neigh = NearestNeighbors(n_neighbors = 30)
     neigh_fit = neigh.fit(embdata_numpy)
@@ -84,11 +76,11 @@ if __name__ == "__main__":
                 FID_matrix[i, j] = fid_value
 
         if i % 20 == 10:
-            np.save(os.path.join(path_save, "FID_30NN_MeanRep.npy"), FID_matrix)
+            np.save(os.path.join(path_save, 'FID_30NN_MeanRep.npy'), FID_matrix)
 
     # transform FID distance matrix to Laplacian matrix
     FIDSyAvg = (FID_matrix + FID_matrix.T) / 2
-    Lmat = np.exp( -FIDSyAvg)
+    Lmat = np.exp(-FIDSyAvg)
     Lmat[Lmat == 1] = 0
 
     ## normalized by row sum

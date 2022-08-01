@@ -80,4 +80,4 @@ if __name__ == "__main__":
 
     model_train = ChemicalVAETrain(chemvae_model=model, device=device)
     model_train.train_np(epochs=60, data_vae_onehot=data_chem_onehot, perturb_with_onehot=perturb_with_onehot_kept,
-                       model_save_per_epochs=10, path_save=path_save)
+                         model_save_per_epochs=10, path_save=path_save)
