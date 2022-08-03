@@ -50,7 +50,7 @@ if __name__ == "__main__":
 	## meta information
 	input_ltpm_label = pd.read_csv(
 		os.path.join(path_data, 'PerturbMeta.csv'))
-	idx_to_train = ""
+	idx_to_train = np.load(os.path.join(path_lincs_onehot, "idx.npy"))
 	perturb_with_onehot_overall = np.array(list(input_ltpm_label['pert_iname']))
 
 	input_ltpm_label = input_ltpm_label.iloc[idx_to_train, :]
