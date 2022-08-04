@@ -18,8 +18,8 @@ from net2net.modules.flow.flatflow import *
 from pytorch_scvi.distributions import *
 from pytorch_scvi.scvi_generate_z import *
 
-from perturbnet.drug_perturb.util import *
-from perturbnet.drug_perturb.data_vae.morphology.modules.image_vae import *
+from perturbnet.perturb.util import *
+from perturbnet.perturb.data_vae.morphology.modules.image_vae import *
 
 class Net2NetFlow_scVIChemStdFlow(nn.Module):
 	"""
