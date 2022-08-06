@@ -1097,5 +1097,487 @@ class Net2NetFlow_TFVAEFlow(nn.Module):
 		else:
 			self.load_state_dict(torch.load(model_save_path, map_location = device))
 
+class Net2NetFlow_TFVAEFixFlow(nn.Module):
+	def __init__(self,
+				 configured_flow,
+				 first_stage_data,
+				 cond_stage_data,
+				 perturbToEmbedLib,
+				 embedData,
+				 sess, enc_ph, z_gen_data_v, is_training,
+				 model_to_use=None,
+				 ignore_keys=[],
+				 first_stage_key="cell",
+				 cond_stage_key="cell",
+				 interpolate_cond_size=-1
+				 ):
+		super().__init__()
+		self.flow = configured_flow
+		self.loss = NLL()
+		self.first_stage_data = first_stage_data
+		self.cond_stage_data = cond_stage_data
+		self.first_stage_key = first_stage_key
+		self.cond_stage_key = cond_stage_key
+		self.interpolate_cond_size = interpolate_cond_size
+		self.training_time = 0
+		self.train_loss = []
+		self.test_loss = []
+		self.perturbToEmbedLib = perturbToEmbedLib
+		self.embedData = embedData
+		self.sess = sess
+		self.enc_ph = enc_ph
+		self.z_gen_data_v = z_gen_data_v
+		self.is_training = is_training
+
+	def forward(self, x, c):
+		zz, logdet = self.flow(x, c)
+		return zz, logdet
+
+	@torch.no_grad()
+	def sample_conditional(self, c):
+		"""
+		sample zz for c to use
+		"""
+		z = self.flow.sample(c)
+		return z
+
+	@torch.no_grad()
+	def generate_zprime(self, x, c, cprime):
+		"""
+		generate new x from x (2 dimensional) and c
+		"""
+		zz, _ = self.flow(x, c)
+		zprime = self.flow.reverse(zz, cprime)
+		return zprime
+
+	@torch.no_grad()
+	def generate_zrec(self, x, c):
+
+		zz, _ = self.flow(x, c)
+		zrec = self.flow.reverse(zz, c)
+		return zrec
+
+	def shared_step(self, batch_first, batch_cond, batch_idx, split="train"):
+		"""
+		compute the loss value in a batch
+		"""
+		x = batch_first  # self.get_input(self.first_stage_key, batch)
+		c = batch_cond  # self.get_input(self.cond_stage_key, batch, is_conditioning = True)
+		zz, logdet = self(x, c)
+		loss, log_dict = self.loss(zz, logdet, split=split)
+		return loss, log_dict
+
+	def configure_optimizers(self, lr):
+		opt = torch.optim.Adam((self.flow.parameters()),
+							   lr=lr,
+							   betas=(0.5, 0.9),
+							   amsgrad=True)
+		return opt
+
+	@torch.no_grad()
+	def encode(self, x_torch):
+		x_np = x_torch.detach().cpu().numpy()
+		feed_dict = {self.enc_ph: x_np, self.is_training: False}
+		z = self.sess.run(self.z_gen_data_v, feed_dict=feed_dict)
+		z_torch = torch.tensor(z).float()
+		return z_torch.unsqueeze(-1).unsqueeze(-1)
+
+	@torch.no_grad()
+	def encode_con(self, z_con, device, sigma_epsilon = 0.001):
+		noise = torch.normal(mean = 0, std = sigma_epsilon, size = (z_con.shape[0], z_con.shape[1])).to(device)
+		return noise + z_con
+
+	@torch.no_grad()
+	def extractEmbed(self, batch_perturb):
+		indx = []
+		for i in range(batch_perturb.shape[0]):
+			indx.append(self.perturbToEmbedLib[self.cond_stage_data[batch_perturb[i].item()]])
+		return torch.tensor(self.embedData[indx])
+
+	@torch.no_grad()
+	def extractEmbedUnseen(self, batch_perturb, cond_stage_data_unseen):
+		indx = []
+		for i in range(batch_perturb.shape[0]):
+			indx.append(self.perturbToEmbedLib[cond_stage_data_unseen[batch_perturb[i].item()]])
+		return torch.tensor(self.embedData[indx])
+
+	def train_evaluateUnseenPer(self, data_unseen, cond_stage_data_unseen, path_save = None, n_epochs=400, batch_size=128, lr=4.5e-6, train_ratio=0.8, seed=42, start_epoch=1, sigma_epsilon = 0.001):
+		"""
+		train the net2net model, with train and test validation
+		"""
+
+
+		assert self.first_stage_data.shape[0] == self.cond_stage_data.shape[0]
+
+		begin = time.time()
+
+		n = self.first_stage_data.shape[0]
+		n_train = int(n * 0.8)
+		n_test = n - n_train
+		n_unseen = len(cond_stage_data_unseen)
+
+		# a random split of train and validation datasets
+		random_state = np.random.RandomState(seed=seed)
+		permutation = random_state.permutation(n)
+		indices_test, indices_train = permutation[:n_test], permutation[n_test:]
+
+		first_stage_train, cond_stage_train = self.first_stage_data[indices_train], self.cond_stage_data[indices_train]
+		first_stage_test, cond_stage_test = self.first_stage_data[indices_test], self.cond_stage_data[indices_test]
+
+		cond_stage_train = torch.tensor(np.array([indices_train]).reshape(-1))
+		cond_stage_test = torch.tensor(np.array([indices_test]).reshape(-1))
+		cond_stage_unseen = torch.tensor(np.array(list(range(len(cond_stage_data_unseen)))).reshape(-1))
+
+		# training
+		train_loader = torch.utils.data.DataLoader(
+			ConcatDataset(first_stage_train,
+						  cond_stage_train),
+			batch_size=batch_size,
+			shuffle=True)
+
+		test_loader = torch.utils.data.DataLoader(
+			ConcatDataset(first_stage_test,
+						  cond_stage_test),
+			batch_size=batch_size,
+			shuffle=True)
+
+		valid_loader = torch.utils.data.DataLoader(
+			ConcatDataset(data_unseen,
+						  cond_stage_unseen),
+			batch_size = batch_size,
+			shuffle = True)
+
+		optimizer = self.configure_optimizers(lr)
+		device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+		unseen_loss_list = []
+
+		for epoch in range(start_epoch, n_epochs + 1):
+			train_loss, test_loss = 0, 0
+			unseen_loss = 0
+
+			self.flow.train()
+			for batch_idx, (batch_first_x, batch_cond_x) in enumerate(train_loader):
+				# batch_first = torch.tensor(self.scvi_model.get_latent_representation(indices = indices, give_mean = False)).float().to(device)
+				batch_first = self.encode(batch_first_x).to(device)
+				batch_cond_x = self.extractEmbed(batch_cond_x).float().to(device)
+
+				batch_cond = self.encode_con(batch_cond_x, device, sigma_epsilon).to(device)
+
+				loss, _ = self.shared_step(batch_first, batch_cond, batch_idx)
+				optimizer.zero_grad()
+				loss.backward()
+				optimizer.step()
+				train_loss += loss.item() * batch_first.shape[0]
+
+			self.flow.eval()
+			for batch_idx, (batch_first_x, batch_cond_x) in enumerate(test_loader):
+				# batch_first = torch.tensor(self.scvi_model.get_latent_representation(indices = indices, give_mean = False)).float().to(device)
+				batch_first = self.encode(batch_first_x).to(device)
+				batch_cond_x = self.extractEmbed(batch_cond_x).float().to(device)
+
+				batch_cond = self.encode_con(batch_cond_x, device, sigma_epsilon).to(device)
+				loss, _ = self.shared_step(batch_first, batch_cond, batch_idx)
+				test_loss += loss.item() * batch_first.shape[0]
+
+			for batch_idx, (batch_first_x, batch_cond_x) in enumerate(valid_loader):
+				# batch_first = torch.tensor(self.scvi_model.get_latent_representation(indices = indices, give_mean = False)).float().to(device)
+				batch_first = self.encode(batch_first_x).to(device)
+				batch_cond_x = self.extractEmbedUnseen(batch_cond_x, cond_stage_data_unseen).float().to(device)
+
+				batch_cond = self.encode_con(batch_cond_x, device, sigma_epsilon).to(device)
+				loss, _ = self.shared_step(batch_first, batch_cond, batch_idx)
+				unseen_loss += loss.item() * batch_first.shape[0]
+
+			train_loss /= n_train
+			test_loss /= n_test
+			unseen_loss /= n_unseen
+
+			print(
+				"[Epoch %d/%d] [Batch %d/%d] [loss: %f/%f]"
+				% (epoch, n_epochs, batch_idx + 1, len(test_loader), train_loss, test_loss)
+			)
+
+			self.train_loss.append(train_loss)
+			self.test_loss.append(test_loss)
+			unseen_loss_list.append(unseen_loss)
+
+		if path_save is not None:
+			np.save(os.path.join(path_save, "unseen_loss.npy"), np.array(unseen_loss_list))
+
+		self.training_time += (time.time() - begin)
+
+	def save(self, dir_path: str, overwrite: bool = False):
+		if not os.path.exists(dir_path) or overwrite:
+			os.makedirs(dir_path, exist_ok=overwrite)
+		else:
+			raise ValueError(
+				"{} already exists, Please provide an unexisting director for saving.".format(dir_path))
+		model_save_path = os.path.join(dir_path, "model_params.pt")
+
+		torch.save(self.state_dict(), model_save_path)
+
+		np.save(os.path.join(dir_path, "training_time.npy"), self.training_time)
+		np.save(os.path.join(dir_path, "train_loss.npy"), self.train_loss)
+		np.save(os.path.join(dir_path, "test_loss.npy"), self.test_loss)
+
+	def load(self, dir_path: str, use_cuda: bool = False, save_use_cuda: bool = False):
+		use_cuda = use_cuda and torch.cuda.is_available()
+		device = torch.device('cpu') if use_cuda is False else torch.device('cuda')
+
+		model_save_path = os.path.join(dir_path, "model_params.pt")
+
+		if use_cuda and save_use_cuda:
+			self.load_state_dict(torch.load(model_save_path))
+			self.to(device)
+		elif use_cuda and save_use_cuda is False:
+			self.load_state_dict(torch.load(model_save_path, map_location="cuda:0"))
+			self.to(device)
+		else:
+			self.load_state_dict(torch.load(model_save_path, map_location=device))
+
+class Net2NetFlow_scVIFixFlow(nn.Module):
+	def __init__(self,
+				 configured_flow,
+				 cond_stage_data,
+				 perturbToEmbedLib,
+				 embedData,
+				 scvi_model,
+				 model_to_use = None,
+				 ignore_keys = [],
+				 first_stage_key = "cell",
+				 cond_stage_key = "cell",
+				 interpolate_cond_size = -1
+				 ):
+		super().__init__()
+		self.flow = configured_flow
+		self.loss = NLL()
+		self.cond_stage_data = cond_stage_data
+		self.first_stage_key = first_stage_key
+		self.cond_stage_key = cond_stage_key
+		self.interpolate_cond_size = interpolate_cond_size
+		self.training_time = 0
+		self.train_loss = []
+		self.test_loss = []
+		self.perturbToEmbedLib = perturbToEmbedLib
+		self.embedData = embedData
+		self.scvi_model = scvi_model
+
+	def forward(self, x, c):
+		zz, logdet = self.flow(x, c)
+		return zz, logdet
+
+	@torch.no_grad()
+	def sample_conditional(self, c):
+		"""
+		sample zz for c to use
+		"""
+		z = self.flow.sample(c)
+		return z
+
+	@torch.no_grad()
+	def generate_zprime(self, x, c, cprime):
+		"""
+		generate new x from x (2 dimensional) and c
+		"""
+		zz, _ = self.flow(x, c)
+		zprime = self.flow.reverse(zz, cprime)
+		return zprime
+
+
+	@torch.no_grad()
+	def generate_zrec(self, x, c):
+
+		zz, _ = self.flow(x, c)
+		zrec = self.flow.reverse(zz, c)
+		return zrec
+
+	@torch.no_grad()
+	def encode_con(self, z_con, device, sigma_epsilon = 0.001):
+		noise = torch.normal(mean = 0, std = sigma_epsilon, size = (z_con.shape[0], z_con.shape[1])).to(device)
+		return noise + z_con
+
+	@torch.no_grad()
+	def extractEmbed(self, batch_perturb):
+		indx = []
+		for i in range(batch_perturb.shape[0]):
+			indx.append(self.perturbToEmbedLib[self.cond_stage_data[batch_perturb[i].item()]])
+		return torch.tensor(self.embedData[indx])
+
+	@torch.no_grad()
+	def extractEmbedUnseen(self, batch_perturb, cond_stage_data_unseen):
+		indx = []
+		for i in range(batch_perturb.shape[0]):
+			indx.append(self.perturbToEmbedLib[cond_stage_data_unseen[batch_perturb[i].item()]])
+		return torch.tensor(self.embedData[indx])
+
+	##########################
+	def shared_step(self, batch_first, batch_cond, batch_idx, split = "train"):
+		"""
+		compute the loss value in a batch
+		"""
+		x = batch_first #self.get_input(self.first_stage_key, batch)
+		c = batch_cond #self.get_input(self.cond_stage_key, batch, is_conditioning = True)
+		zz, logdet = self(x, c)
+		loss, log_dict = self.loss(zz, logdet, split = split)
+		return loss, log_dict
+
+	def configure_flow_optimizers(self, lr):
+		opt = torch.optim.Adam((self.flow.parameters()),
+							   lr = lr,
+							   betas = (0.5, 0.9),
+							   amsgrad = True)
+		return opt
+
+	def configure_vae_optimizers(self, lr):
+
+		opt = torch.optim.Adam(self.model_con.parameters(),
+							   lr = lr,
+							   #betas=(0.5, 0.9),
+							   amsgrad = False)
+		return opt
+
+	def configure_vaeflow_optimizers(self, lr):
+
+		params = list(self.flow.parameters()) + list(self.model_con.parameters())
+		opt = torch.optim.Adam(params,
+							   lr=lr,
+							   betas=(0.5, 0.9),
+							   amsgrad=True)
+		return opt
+
+
+	def train_evaluateUnseenPer(self, anndata_unseen, cond_stage_data_unseen, path_save = None,
+								n_epochs = 400, batch_size = 128, lr = 4.5e-6,
+								train_ratio = 0.8, seed = 42, start_epoch = 1, sigma_epsilon = 0.001):
+		"""
+		train the net2net model, with train and test validation
+		"""
+
+		begin = time.time()
+		n = self.cond_stage_data.shape[0]
+		n_train = int(n * 0.8)
+		n_test = n - n_train
+		n_unseen = len(cond_stage_data_unseen)
+
+		# a random split of train and validation datasets
+		random_state = np.random.RandomState(seed = seed)
+		permutation = random_state.permutation(n)
+		indices_test, indices_train = permutation[:n_test], permutation[n_test:]
+
+
+		cond_stage_train = torch.tensor(np.array([indices_train]).reshape(-1))
+		cond_stage_test = torch.tensor(np.array([indices_test]).reshape(-1))
+		cond_stage_unseen = torch.tensor(np.array(list(range(len(cond_stage_data_unseen)))).reshape(-1))
+
+
+		# training
+		train_loader = torch.utils.data.DataLoader(
+			ConcatDatasetWithIndices(cond_stage_train,
+									 cond_stage_train),
+			batch_size = batch_size,
+			shuffle = False)
+
+		test_loader = torch.utils.data.DataLoader(
+			ConcatDatasetWithIndices(cond_stage_test,
+									 cond_stage_test),
+			batch_size = batch_size,
+			shuffle = False)
+
+		valid_loader = torch.utils.data.DataLoader(
+			ConcatDatasetWithIndices(cond_stage_unseen,
+									 cond_stage_unseen),
+			batch_size = batch_size,
+			shuffle = False)
+
+		optimizer = self.configure_flow_optimizers(lr)
+		device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+		unseen_loss_list = []
+
+		for epoch in range(start_epoch, n_epochs + 1):
+			train_loss, test_loss = 0, 0
+			unseen_loss = 0
+
+			self.flow.train()
+			for batch_idx, (_, batch_cond_x, indices) in enumerate(train_loader):
+
+				batch_first = torch.tensor(self.scvi_model.get_latent_representation(indices = indices_train[indices], give_mean = False)).float().to(device)
+
+				batch_cond_x = self.extractEmbed(batch_cond_x).float().to(device)
+				batch_cond = self.encode_con(batch_cond_x, device, sigma_epsilon).to(device)
+
+				loss, _ = self.shared_step(batch_first.unsqueeze(-1).unsqueeze(-1), batch_cond, batch_idx)
+				optimizer.zero_grad()
+				loss.backward()
+				optimizer.step()
+				train_loss += loss.item() * batch_first.shape[0]
+
+			self.flow.eval()
+			for batch_idx, (_, batch_cond_x, indices) in enumerate(test_loader):
+				batch_first = torch.tensor(self.scvi_model.get_latent_representation(indices = indices_test[indices], give_mean = False)).float().to(device)
+
+				batch_cond_x = self.extractEmbed(batch_cond_x).float().to(device)
+				batch_cond = self.encode_con(batch_cond_x, device, sigma_epsilon).to(device)
+
+				loss, _ = self.shared_step(batch_first.unsqueeze(-1).unsqueeze(-1), batch_cond, batch_idx)
+				test_loss += loss.item() * batch_first.shape[0]
+
+			for batch_idx, (_, batch_cond_x, indices) in enumerate(valid_loader):
+				batch_first = torch.tensor(self.scvi_model.get_latent_representation(adata = anndata_unseen[indices.cpu().detach().numpy(), :].copy(),
+																					 give_mean = False)).float().to(device)
+				batch_cond_x = self.extractEmbedUnseen(batch_cond_x, cond_stage_data_unseen).float().to(device)
+				batch_cond = self.encode_con(batch_cond_x, device, sigma_epsilon).to(device)
+
+				loss, _ = self.shared_step(batch_first.unsqueeze(-1).unsqueeze(-1), batch_cond, batch_idx)
+				unseen_loss += loss.item() * batch_first.shape[0]
+
+			train_loss /= n_train
+			test_loss /= n_test
+			unseen_loss /= n_unseen
+
+			print(
+				"[Epoch %d/%d] [Batch %d/%d] [loss: %f/%f]"
+				% (epoch, n_epochs, batch_idx + 1, len(test_loader), train_loss, test_loss)
+			)
+
+			self.train_loss.append(train_loss)
+			self.test_loss.append(test_loss)
+			unseen_loss_list.append(unseen_loss)
+
+		if path_save is not None:
+			np.save(os.path.join(path_save, "unseen_loss.npy"), np.array(unseen_loss_list))
+
+		self.training_time += (time.time() - begin)
+
+
+	def save(self, dir_path: str, overwrite: bool = False):
+		if not os.path.exists(dir_path) or overwrite:
+			os.makedirs(dir_path, exist_ok = overwrite)
+		else:
+			raise ValueError(
+				"{} already exists, Please provide an unexisting director for saving.".format(dir_path))
+		model_save_path = os.path.join(dir_path, "model_params.pt")
+
+		torch.save(self.state_dict(), model_save_path)
+
+		np.save(os.path.join(dir_path, "training_time.npy"), self.training_time)
+		np.save(os.path.join(dir_path, "train_loss.npy"), self.train_loss)
+		np.save(os.path.join(dir_path, "test_loss.npy"), self.test_loss)
+
+
+	def load(self, dir_path: str, use_cuda: bool = False, save_use_cuda: bool = False):
+		use_cuda = use_cuda and torch.cuda.is_available()
+		device = torch.device('cpu') if use_cuda is False else torch.device('cuda')
+
+		model_save_path = os.path.join(dir_path, "model_params.pt")
+
+
+		if use_cuda and save_use_cuda:
+			self.load_state_dict(torch.load(model_save_path))
+			self.to(device)
+		elif use_cuda and save_use_cuda is False:
+			self.load_state_dict(torch.load(model_save_path, map_location = "cuda:0"))
+			self.to(device)
+		else:
+			self.load_state_dict(torch.load(model_save_path, map_location = device))
 
 
