@@ -13,93 +13,99 @@ from perturbnet.perturb.chemicalvae.chemicalVAE import *
 from perturbnet.perturb.data_vae.modules.vae import *
 
 if __name__ == "__main__":
-    # (1) load data
-    ## directories
-    path_save = "FIDDistances_LINCS"
-    if not os.path.exists(path_save):
-        os.makedirs(path_save, exist_ok=True)
+	# (1) load data
+	## directories
+	path_save = "FIDDistances_LINCS"
+	if not os.path.exists(path_save):
+		os.makedirs(path_save, exist_ok=True)
 
-    path_data = ""
-    path_chemvae_model = ""
-    path_vae_model_eval = ""
-    path_lincs_onehot = os.path.join(path_data + "oneHot/", "GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_UniqueCanonicalSmilesOneHot.npy")
-    path_std_param = ""
+	path_data = ""
+	path_chemvae_model = ""
+	path_vae_model_eval = ""
+	path_lincs_onehot = os.path.join(path_data, "SmilesOneHot.npy")
+	path_std_param = ""
 
-    usedata = np.load(os.path.join(path_data, "GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed.npy"))
+	usedata = np.load(os.path.join(path_data, "data.npy"))
 
-    ## meta information
-    input_ltpm_label = pd.read_csv(
-        os.path.join(path_data, "GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_PerturbMeta.csv"))
-    perturb_with_onehot_overall = np.array(list(input_ltpm_label["canonical_smiles"]))
+	## meta information
+	input_ltpm_label = pd.read_csv(
+		os.path.join(path_data, "PerturbMeta.csv"))
+	perturb_with_onehot_overall = np.array(list(input_ltpm_label["canonical_smiles"]))
 
-    ## onehot
-    data_lincs_onehot = np.load(path_lincs_onehot)
-    trt_list = np.load(os.path.join(path_data + "oneHot/", "GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_UniqueCanonicalSmilesOneHotSmiles.npy"))
+	## onehot
+	data_lincs_onehot = np.load(path_lincs_onehot)
+	trt_list = np.load(os.path.join(path_data, "Smiles.npy"))
 
-    # evaluation vae
-    vae = VAE(num_cells_train = usedata.shape[0], x_dimension = usedata.shape[1], learning_rate = 1e-4, BNTrainingMode = False)
-    vae.restore_model(path_vae_model_eval)
+	# evaluation vae
+	vae = VAE(num_cells_train = usedata.shape[0], 
+			  x_dimension = usedata.shape[1], 
+			  learning_rate = 1e-4, 
+			  BNTrainingMode = False)
 
-    # (2) load models
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+	vae.restore_model(path_vae_model_eval)
 
-    ## ChemicalVAE
-    model_chemvae = ChemicalVAE(n_char = data_lincs_onehot.shape[2], 
-                                max_len = data_lincs_onehot.shape[1]).to(device)
-    model_chemvae.load_state_dict(torch.load(path_chemvae_model, map_location=device))
-    model_chemvae.eval()
+	# (2) load models
+	device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    ## standardization model
-    mu_std_model = np.load(os.path.join(path_std_param, "mu.npy"))
-    std_std_model = np.load(os.path.join(path_std_param, "std.npy"))
-    std_model = StandardizeLoad(mu_std_model, std_std_model, device)
+	## ChemicalVAE
+	model_chemvae = ChemicalVAE(n_char = data_lincs_onehot.shape[2], 
+								max_len = data_lincs_onehot.shape[1]).to(device)
+	model_chemvae.load_state_dict(torch.load(path_chemvae_model, map_location=device))
+	model_chemvae.eval()
 
-    ## latent values of perturbations
-    _, _, _, embdata_torch = model_chemvae(torch.tensor(data_lincs_onehot).float().to(device))
-    embdata_numpy = std_model.standardize_z(embdata_torch.cpu().detach().numpy())
+	## standardization model
+	mu_std_model = np.load(os.path.join(path_std_param, "mu.npy"))
+	std_std_model = np.load(os.path.join(path_std_param, "std.npy"))
+	std_model = StandardizeLoad(mu_std_model, std_std_model, device)
 
-    neigh = NearestNeighbors(n_neighbors = 30)
-    neigh_fit = neigh.fit(embdata_numpy)
-    neigh_lib = neigh.kneighbors()[1].copy()
+	## latent values of perturbations
+	_, _, _, embdata_torch = model_chemvae(torch.tensor(data_lincs_onehot).float().to(device))
+	embdata_numpy = std_model.standardize_z(embdata_torch.cpu().detach().numpy())
 
-    # (3) metrics
-    fidscore_vae_cal = fidscore_vae_extend(vae.sess, vae.z_mean, vae.mu, vae.x, vae.is_training)
+	neigh = NearestNeighbors(n_neighbors = 30)
+	neigh_fit = neigh.fit(embdata_numpy)
+	neigh_lib = neigh.kneighbors()[1].copy()
 
-    # (4) evaluations
-    FID_matrix = np.zeros((len(trt_list), len(trt_list)))
+	# (3) metrics
+	fidscore_vae_cal = fidscore_vae_extend(vae.sess, vae.z_mean, vae.mu, vae.x, vae.is_training)
 
-    for i in range(len(trt_list)):
-        perturb1 = trt_list[i]
-        neigh_trts = neigh_lib[i]
-        idx_trt_type1 = np.where(perturb_with_onehot_overall == perturb1)[0]
+	# (4) evaluations
+	FID_matrix = np.zeros((len(trt_list), len(trt_list)))
 
-        for j in neigh_trts:
+	for i in range(len(trt_list)):
+		perturb1 = trt_list[i]
+		neigh_trts = neigh_lib[i]
+		idx_trt_type1 = np.where(perturb_with_onehot_overall == perturb1)[0]
 
-            perturb2 = trt_list[j]
-            idx_trt_type2 = np.where(perturb_with_onehot_overall == perturb2)[0]
+		for j in neigh_trts:
 
-            fid_value, _ = fidscore_vae_cal.calculate_fid_vae_score(usedata[idx_trt_type1], usedata[idx_trt_type2], give_mean = True)
+			perturb2 = trt_list[j]
+			idx_trt_type2 = np.where(perturb_with_onehot_overall == perturb2)[0]
 
-            if fid_value >= 0:
-                FID_matrix[i, j] = fid_value
+			fid_value, _ = fidscore_vae_cal.calculate_fid_vae_score(usedata[idx_trt_type1], 
+																	usedata[idx_trt_type2], 
+																	give_mean = True)
 
-        if i % 20 == 10:
-            np.save(os.path.join(path_save, "FID_30NN_MeanRep.npy"), FID_matrix)
+			if fid_value >= 0:
+				FID_matrix[i, j] = fid_value
 
-    # transform FID distance matrix to Laplacian matrix
-    FIDSyAvg = (FID_matrix + FID_matrix.T) / 2
-    Lmat = np.exp( -FIDSyAvg)
-    Lmat[Lmat == 1] = 0
+		if i % 20 == 10:
+			np.save(os.path.join(path_save, "FID_30NN_MeanRep.npy"), FID_matrix)
 
-    ## normalized by row sum
-    indices_with_rowSumZero = np.where(Lmat.sum(1) == 0)[0]
-    Lmat = Lmat / Lmat.sum(axis = 1)[:, np.newaxis]
+	# transform FID distance matrix to Laplacian matrix
+	FIDSyAvg = (FID_matrix + FID_matrix.T) / 2
+	Lmat = np.exp( -FIDSyAvg)
+	Lmat[Lmat == 1] = 0
 
-    for i in indices_with_rowSumZero:
-        for j in range(Lmat.shape[1]):
-            Lmat[i, j] = 0.0
+	## normalized by row sum
+	indices_with_rowSumZero = np.where(Lmat.sum(1) == 0)[0]
+	Lmat = Lmat / Lmat.sum(axis = 1)[:, np.newaxis]
 
-    Lmat = np.eye(Lmat.shape[0]) - Lmat
+	for i in indices_with_rowSumZero:
+		for j in range(Lmat.shape[1]):
+			Lmat[i, j] = 0.0
 
-    np.save(os.path.join(path_save, "Lmat_30NN_MeanRep.npy"), Lmat)
+	Lmat = np.eye(Lmat.shape[0]) - Lmat
+
+	np.save(os.path.join(path_save, "Lmat_30NN_MeanRep.npy"), Lmat)
 

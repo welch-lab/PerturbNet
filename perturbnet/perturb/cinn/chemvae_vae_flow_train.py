@@ -49,7 +49,7 @@ if __name__ == "__main__":
 	input_ltpm_label = input_ltpm_label.iloc[idx_to_train, :]
 	
 
-	list_canonSmiles = list(input_ltpm_label['canonical_smiles'])
+	list_canonSmiles = list(input_ltpm_label["canonical_smiles"])
 	#indicesWithOnehot = [i for i in range(len(list_canonSmiles)) if list_canonSmiles[i] in set(trt_list)]
 	indicesWithOnehot = np.in1d(list_canonSmiles, trt_list)
 	
@@ -66,18 +66,19 @@ if __name__ == "__main__":
 	vae = VAE(num_cells_train = usedata.shape[0], x_dimension = usedata.shape[1], learning_rate = 1e-4, BNTrainingMode = False)
 	vae.restore_model(path_vae_model)
 
-	device = 'cuda' if torch.cuda.is_available() else 'cpu'
+	device = "cuda" if torch.cuda.is_available() else "cpu"
 	
 	## ChemicalVAE
-	model_chemvae = ChemicalVAE(n_char = data_chem_onehot.shape[2], max_len = data_chem_onehot.shape[1]).to(device)
+	model_chemvae = ChemicalVAE(n_char = data_chem_onehot.shape[2], 
+								max_len = data_chem_onehot.shape[1]).to(device)
 	model_chemvae.load_state_dict(torch.load(path_chemvae_model, map_location = device))
 	model_chemvae.eval()
 
 	# std model 
 	#std_model = Standardize(data_all = data_chem_onehot, model = model_chemvae, device = device)
 
-	mu_std_model = np.load(os.path.join(path_std_param, 'mu.npy'))
-	std_std_model = np.load(os.path.join(path_std_param, 'std.npy'))
+	mu_std_model = np.load(os.path.join(path_std_param, "mu.npy"))
+	std_std_model = np.load(os.path.join(path_std_param, "std.npy"))
 	std_model = StandardizeLoad(mu_std_model, std_std_model, device)
 
 	## cinn
@@ -115,5 +116,9 @@ if __name__ == "__main__":
 	model_c.train(n_epochs = 50, batch_size = 128, lr = 4.5e-6)
 	#### save the model 
 	model_c.save(path_cinn_model_save)
+
+
+
+	
 
 

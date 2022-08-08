@@ -39,9 +39,13 @@ class ChemicalVAE(nn.Module):
 	"""
 	ChemicalVAE module
 	"""
-	def __init__(self, n_char, z_dim = 196, n_conv = int(8 * 1.15875438383), 
-				 k_conv = int(8 * 1.1758149644), n_conv2 = int(8 * 1.15875438383 ** 2), 
-				 k_conv2 = int(8 * 1.1758149644 ** 2), prob_drop = 0.082832929704794792, 
+	def __init__(self, n_char, 
+				 z_dim = 196, 
+				 n_conv = int(8 * 1.15875438383), 
+				 k_conv = int(8 * 1.1758149644), 
+				 n_conv2 = int(8 * 1.15875438383 ** 2), 
+				 k_conv2 = int(8 * 1.1758149644 ** 2), 
+				 prob_drop = 0.082832929704794792, 
 				 max_len = 120):
 
 		super(ChemicalVAE, self).__init__()
@@ -88,6 +92,9 @@ class ChemicalVAE(nn.Module):
 		self.max_len = max_len
 
 	def encode(self, x):
+		"""
+		encode one-hot encodings of chemicals
+		"""
 		x = self.tanh(self.conv_1(x))
 		x = self.bnConv1(x)
 
@@ -105,10 +112,16 @@ class ChemicalVAE(nn.Module):
 		return self.linear_1(x), self.linear_2(x)
 
 	def sampling(self, z_mean, z_logvar):
+		"""
+		sampled representations from the latent means and stds
+		"""
 		epsilon =  1e-2 * torch.randn_like(z_logvar)
 		return torch.exp(0.5 * z_logvar) * epsilon + z_mean
 
 	def decode(self, z):
+		"""
+		decode latent representations to one-hot encodings
+		"""
 		z = self.tanh(self.linear_3(z))
 		z = self.dropout2(z)
 		z = self.bn2(z)
@@ -140,8 +153,14 @@ class ChemicalVAETrain:
 		self.chemvae_model = chemvae_model
 		self.device = device
 
-	def train_np(self, epochs, data_vae_onehot, perturb_with_onehot,
-				 lr_vae=0.0001, batch_size_vae=128, batch_size_vaezlz =128, model_save_per_epochs = None,
+	def train_np(self, 
+				 epochs, 
+				 data_vae_onehot, 
+				 perturb_with_onehot,
+				 lr_vae = 0.0001, 
+				 batch_size_vae = 128, 
+				 batch_size_vaezlz =128, 
+				 model_save_per_epochs = None,
 				 path_save = None):
 
 		optimizer = optim.Adam(self.chemvae_model.parameters(), lr = lr_vae)

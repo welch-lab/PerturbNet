@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 # Command-line program to view some of the syntax of a SMILES string
 
 # Copyright Andrew Dalke, Andrew Dalke Scientific AB (Sweden), 2018
@@ -130,10 +132,10 @@ supported_bracket_symbols = [
 	'Rb', 'Sr', 'Y',  'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I',  'Xe',
 
 	'Cs', 'Ba', 'La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu',
-					  'Hf', 'Ta', 'W',  'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn',
+						'Hf', 'Ta', 'W',  'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn',
 
 	'Fr', 'Ra', 'Ac', 'Th', 'Pa', 'U',  'Np', 'Pu', 'Am', 'Cm', 'Bk', 'Cf', 'Es', 'Fm', 'Md', 'No', 'Lr',
-					  'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og',
+						'Rf', 'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl', 'Mc', 'Lv', 'Ts', 'Og',
 	]
 supported_bracket_symbols = dict((symbol, i) for (i, symbol) in enumerate(supported_bracket_symbols))
 supported_bracket_symbols.update({
@@ -322,26 +324,26 @@ class ClosureError(ParseError):
 # The lexer
 _smiles_lexer = re.compile(r"""
 (?P<atom>   # These will be processed by 'tokenize_atom'
-  \*|
-  Cl|Br|[cnospBCNOFPSI]|  # organic subset
-  \[[^]]+\]               # bracket atom
+	\*|
+	Cl|Br|[cnospBCNOFPSI]|  # organic subset
+	\[[^]]+\]               # bracket atom
 ) |
 (?P<bond>
-  [=#$/\\:-]
+	[=#$/\\:-]
 ) |
 (?P<closure>
-  [0-9]|          # single digit
-  %[0-9][0-9]|    # two digits
-  %\([0-9]+\)     # more than two digits
+	[0-9]|          # single digit
+	%[0-9][0-9]|    # two digits
+	%\([0-9]+\)     # more than two digits
 ) |
 (?P<open_branch>
-  \(
+	\(
 ) |
 (?P<close_branch>
-  \)
+	\)
 ) |
 (?P<dot>
-  \.
+	\.
 )
 """, re.X).match
 
@@ -800,7 +802,7 @@ def find_closures(tokens, smiles):
 				second_bond = (None if bond_token is None else bond_token.token_index)
 
 				yield Closure(closure, prev_atom.token_index, first_bond, prev_closure.token_index,
-							  atom.token_index, second_bond, token.token_index, bond_type)
+								atom.token_index, second_bond, token.token_index, bond_type)
 				del closure_table[closure]
 			else:
 				closure_table[closure]  = (atom, bond_token, token)
@@ -888,7 +890,7 @@ class Graph(object):
 			to_xatoms = ["%d->%d(%s%s)" % (
 				bond_index, atom_index,
 				self.bonds[bond_index].get_bond_type(atom.index, "~"), self.atoms[atom_index].token.term)
-							   for bond_index, atom_index in zip(atom.bond_indices, atom.neighbor_indices)]
+								 for bond_index, atom_index in zip(atom.bond_indices, atom.neighbor_indices)]
 			if not to_xatoms:
 				to_xatoms = "(disconnected)"
 			else:
@@ -1148,13 +1150,13 @@ def make_mol_graph(graph, mol, mol_atoms, mol_atom_symbols, bond_symbol_table):
 				raise AssertionError(("Failed to find", key))
 
 		mol_graph_bond = MolGraphBond(bond, graph_bond.index, graph_bond.token,
-									  graph_bond.atom_indices, bond_type)
+										graph_bond.atom_indices, bond_type)
 		mol_graph_bonds.append(mol_graph_bond)
 
 	for mol_graph_atom in mol_graph_atoms:
 		bond_types = mol_graph_atom.bond_types
 		for bond_idx, neighbor_idx in zip(mol_graph_atom.bond_indices,
-										  mol_graph_atom.neighbor_indices):
+											mol_graph_atom.neighbor_indices):
 			mol_graph_bond = mol_graph_bonds[bond_idx]
 			# XXX swap direction?
 			bond_types.append(mol_graph_bond.bond_type)
@@ -1341,7 +1343,7 @@ class Ruleset(object):
 
 	def copy(self):
 		return Ruleset(self.rules_by_property.copy(), self.default_property_values.copy(),
-					   dict((k, v.copy()) for (k, v) in self.property_namespaces.items()))
+						 dict((k, v.copy()) for (k, v) in self.property_namespaces.items()))
 
 
 	def add_property_rule(self, property_rule):
@@ -1558,7 +1560,7 @@ class RecursionCheck(object):
 				else:
 					dependencies.append("%r (%r)" % (name, r.get_name()))
 			raise ValueError("Dependency loop detected trying to compute property %r (%s)"
-							  % (propname, " -> ".join(dependencies)))
+								% (propname, " -> ".join(dependencies)))
 
 		self.seen.add(propname)
 		self.stack.append(propname)
@@ -2389,7 +2391,7 @@ def draw_bar(layout, start, end, start_text, end_text, c, label,
 			text = text[:offset] + " " + label + " " + text[offset+inline_len:]
 
 	return layout.add(location, start-len(left_label), left_label + text + right_label,
-						  row=row)
+							row=row)
 
 #################### Tracks
 
@@ -2429,7 +2431,7 @@ class TrackManager(object):
 
 				track_args = getattr(func, "track_args", None)
 				track = Track(track_name, func, track_args=track_args,
-							  help=local_help, need_toolkit=need_toolkit)
+								help=local_help, need_toolkit=need_toolkit)
 				self.add_track(track)
 
 				return func
@@ -2615,7 +2617,7 @@ def add_branch_track(layout, properties, location):
 	layout.end_track(location, "branches")
 
 @add_track("closures", help="show the start and end location of each pair of closures",
-		   need_toolkit=True)
+			 need_toolkit=True)
 @track_arg(
 	"--closure-atom-style",
 	choices=("default", "atoms", "elements", "end-atoms", "end-elements",
@@ -2838,7 +2840,7 @@ def _init_bond_type_labels():
 
 @add_track("neighbors", "show which atoms are connected to a given atom index (--atom-index is required)")
 @track_arg("--atom-index", "--idx", type=int, metavar="N",
-		   help="Define the atom to use for the 'neighbors' track.")
+			 help="Define the atom to use for the 'neighbors' track.")
 def add_neighbor_track(layout, properties, location, atom_index):
 	if atom_index is None:
 		return  # ignore unless --atom-index is specified
@@ -2874,13 +2876,13 @@ def add_neighbor_track(layout, properties, location, atom_index):
 	layout.end_track(location, "neighbors")
 
 def draw_subgraph(layout, properties, atom_indices,
-				  label = None,
-				  atom_label = None,
-				  atom_symbol_label = None,
-				  bond_label = None,
-				  branch_label = None,
-				  closure_label = None,
-				  use_full_row=True, location="below"):
+					label = None,
+					atom_label = None,
+					atom_symbol_label = None,
+					bond_label = None,
+					branch_label = None,
+					closure_label = None,
+					use_full_row=True, location="below"):
 	tokens = properties["tokens"]
 	atom_tokens = properties["atom_tokens"]
 
@@ -2982,8 +2984,8 @@ def add_fragment_track(layout, properties, location):
 	fragments = properties["fragments"]
 	for fragment_index, atom_indices in enumerate(fragments):
 		draw_subgraph(layout, properties, atom_indices,
-					  label = str(fragment_index),
-					  location = location)
+						label = str(fragment_index),
+						location = location)
 
 	layout.end_track(location, "fragments")
 
@@ -3035,15 +3037,15 @@ default.
 To disable track display, use "-a none -b none". This tells smiview to
 not use the default tracks but only to show the "none" tracks, which
 does nothing. For example:
-  %(prog)s 'CCO' -a none --use-rdkit
+	%(prog)s 'CCO' -a none --use-rdkit
 will only verify the syntax and display the SMILES string
 
 Examples:
 
-  %(prog)s 'Cc1c(OC)c(C)cnc1CS(=O)c2nc3ccc(OC)cc3n2' --fancy
-  %(prog)s 'O/N=C/5C.F5' -a offsets -b closures
-  %(prog)s 'CC1CC2C3CCC4=CC(=O)C=CC4(C)C3(F)C(O)CC2(C)C1(O)C(=O)CO' --smarts '[R]'
-  %(prog)s 'CN1C(=O)CN=C(c2ccccc2)c2cc(Cl)ccc21' --atom-index 2
+	%(prog)s 'Cc1c(OC)c(C)cnc1CS(=O)c2nc3ccc(OC)cc3n2' --fancy
+	%(prog)s 'O/N=C/5C.F5' -a offsets -b closures
+	%(prog)s 'CC1CC2C3CCC4=CC(=O)C=CC4(C)C3(F)C(O)CC2(C)C1(O)C(=O)CO' --smarts '[R]'
+	%(prog)s 'CN1C(=O)CN=C(c2ccccc2)c2cc(Cl)ccc21' --atom-index 2
 """
 
 
@@ -3210,7 +3212,7 @@ def _get_alias_track_names(alias_prefix, alias_table, change_input, use_smarts, 
 	return _merge_aliases(alias_names, alias_table)
 
 def get_tracks_and_kwargs(input_tracks, track_manager, args, location, toolkit_api,
-						  change_input, use_smarts, use_atom_index, has_toolkit):
+							change_input, use_smarts, use_atom_index, has_toolkit):
 	alias_table = _track_defaults[location]
 	default_names = _get_alias_track_names(
 		"default", alias_table, change_input, use_smarts, use_atom_index)
@@ -3240,7 +3242,7 @@ def get_tracks_and_kwargs(input_tracks, track_manager, args, location, toolkit_a
 		try:
 			kwargs = track.get_kwargs(args, toolkit_api)
 		except ArgumentError as err:
-		   die("Cannot use track %r: %s" % (track_name, err))
+			 die("Cannot use track %r: %s" % (track_name, err))
 		tracks_and_kwargs.append( (track, kwargs) )
 
 	return tracks_and_kwargs

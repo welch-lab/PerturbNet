@@ -1,10 +1,14 @@
-
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 import torch
 import torch.nn.functional as F
 import torch.nn as nn
 from distributions import *
 
 class ConcatDataset(torch.utils.data.Dataset):
+	"""
+	data structure with sample indices of two datasets
+	"""
 	def __init__(self, *datasets):
 		self.datasets = datasets
 
@@ -14,7 +18,6 @@ class ConcatDataset(torch.utils.data.Dataset):
 	def __len__(self):
 		return min(len(d) for d in self.datasets)
 
-
 class scvi_predictive_z:
 	"""
 	class to generate the gene expression data from latent variables of scVI
@@ -22,7 +25,6 @@ class scvi_predictive_z:
 	def __init__(self, model):
 		super().__init__()
 		self.model = model
-
 
 	def one_hot(self, index, n_cat):
 		onehot = torch.zeros(index.size(0), n_cat, device = index.device)

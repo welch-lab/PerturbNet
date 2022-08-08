@@ -56,7 +56,7 @@ if __name__ == "__main__":
 	input_ltpm_label = input_ltpm_label.iloc[idx_to_train, :]
 	perturb_with_onehot = perturb_with_onehot_overall[idx_to_train]
 
-	removed_all_pers = np.load(os.path.join(path_data + '/onehot_geneticPerturbations', "LINCS_400RemovedGeneticPerturbs.npy"), allow_pickle = True)
+	removed_all_pers = np.load(os.path.join(path_data, "RemovedPerturbs.npy"), allow_pickle = True)
 	kept_indices = [i for i in range(len(perturb_with_onehot)) if perturb_with_onehot[i] not in removed_all_pers]
 	input_ltpm_label = input_ltpm_label.iloc[kept_indices, :]
 	perturb_with_onehot_kept = perturb_with_onehot[kept_indices]

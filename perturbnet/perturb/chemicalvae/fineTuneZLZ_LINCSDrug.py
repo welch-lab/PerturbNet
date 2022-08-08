@@ -31,27 +31,22 @@ if __name__ == "__main__":
 	## Data preparation
 	########################
 	# with smiles
-	idx_to_train = np.load(os.path.join(path_lincs_onehot, 'GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_IndicesWithCanonicalSmiles.npy'))
-	
-	input_ltpm_label = pd.read_csv(os.path.join(path_data, 'GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_PerturbMeta.csv'))
-	perturb_with_onehot_overall = np.array(list(input_ltpm_label['canonical_smiles']))
-
+	idx_to_train = np.load(os.path.join(path_lincs_onehot, "idx.npy"))
+	input_ltpm_label = pd.read_csv(os.path.join(path_data, "PerturbMeta.csv"))
+	perturb_with_onehot_overall = np.array(list(input_ltpm_label["canonical_smiles"]))
 	input_ltpm_label = input_ltpm_label.iloc[idx_to_train, :]
-	
-	indicesWithoutRes = list(input_ltpm_label["canonical_smiles"] != "restricted")
-	input_ltpm_label = input_ltpm_label.iloc[indicesWithoutRes, :]
-	
+		
 	# with onehot data
-	data_lincs_onehot = np.load(os.path.join(path_lincs_onehot, "GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_UniqueCanonicalSmilesOneHot.npy"))
-	trt_list = np.load(os.path.join(path_lincs_onehot, 'GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328_processed_UniqueCanonicalSmilesOneHotSmiles.npy'))
+	data_lincs_onehot = np.load(os.path.join(path_lincs_onehot, "SmilesOneHot.npy"))
+	trt_list = np.load(os.path.join(path_lincs_onehot, "Smiles.npy"))
 	
 	list_canonSmiles = list(input_ltpm_label["canonical_smiles"])
 	indicesWithOnehot = np.in1d(list_canonSmiles, trt_list)
 
-	perturb_with_onehot = perturb_with_onehot_overall[idx_to_train][indicesWithoutRes][indicesWithOnehot]
+	perturb_with_onehot = perturb_with_onehot_overall[idx_to_train][indicesWithOnehot]
 
 	# removed perturbations
-	removed_all_pers = np.load(os.path.join(path_lincs_onehot, "LINCS_2000RemovedPerturbs.npy"))
+	removed_all_pers = np.load(os.path.join(path_lincs_onehot, "RemovedPerturbs.npy"))
 
 	kept_indices = [i for i in range(len(perturb_with_onehot)) if perturb_with_onehot[i] not in removed_all_pers]
 	perturb_with_onehot_kept = perturb_with_onehot[kept_indices]
@@ -73,7 +68,8 @@ if __name__ == "__main__":
 	torch.manual_seed(42)
 	device = "cuda" if torch.cuda.is_available() else "cpu"
 
-	model = ChemicalVAE(n_char = data_chem_onehot.shape[2], max_len = data_chem_onehot.shape[1]).to(device)
+	model = ChemicalVAE(n_char = data_chem_onehot.shape[2], 
+						max_len = data_chem_onehot.shape[1]).to(device)
 	if reload_model:
 		model.load_state_dict(torch.load(path_chem_model, map_location = device))
 
@@ -81,6 +77,10 @@ if __name__ == "__main__":
 									   perturbToOnehot = perturbToOnehot, data_tune_onehot = data_lincs_onehot, 
 									   device = device)
 	
-	model_zlz.train_np(epochs = 10, data_vae_onehot = data_chem_onehot, perturb_with_onehot = perturb_with_onehot_kept,
-					   lambda_zlz = lambda_val, model_save_per_epochs = 2, path_save = path_save)
+	model_zlz.train_np(epochs = 10, 
+					   data_vae_onehot = data_chem_onehot, 
+					   perturb_with_onehot = perturb_with_onehot_kept,
+					   lambda_zlz = lambda_val, 
+					   model_save_per_epochs = 2, 
+					   path_save = path_save)
 	

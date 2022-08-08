@@ -7,10 +7,9 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
 
-
 class SCVIZ_CheckNet2Net:
-	"""Class to do scVI evaluation of cinn models 
-	for sci-Plex data
+	"""Class to use PerturbNet to predict cellular representations and 
+	count responses (scVI) from perturbation representations
 	"""
 	def __init__(self, model, device, scvi_model_decode):
 		super().__init__()
@@ -121,10 +120,9 @@ class SCVIZ_CheckNet2Net:
 
 
 class TFVAEZ_CheckNet2Net:
-	"""Class to do TensorFlow VAE evaluation of cinn models 
-	for LINCS data
+	"""Class to use PerturbNet to predict cellular representations and 
+	normalized responses (VAE) from perturbation representations
 	"""
-
 	def __init__(self, model, device, tf_sess, tf_x_rec_data, tf_z_latent, is_training):
 		super().__init__()
 		self.model = model
