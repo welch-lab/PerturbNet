@@ -7,7 +7,7 @@ PerturbNet is a deep generative model that can predict the distribution of cell 
 
 [`./perturbnet`](https://github.com/welch-lab/PerturbNet/tree/main/perturbnet) contains the code to train the PerturbNet framework. We provide illustrations and guidance of how to user our repository for PerturbNet
 
-[`./pytorch_scvi`](https://github.com/welch-lab/PerturbNet/tree/main/pytorch_scvi) contains our adapted modules to decode latent representations to expresssion profiles based on scVI version 0.7.1.
+[`./pytorch_scvi`](https://github.com/welch-lab/PerturbNet/tree/main/pytorch_scvi) contains our adapted modules to decode latent representations to expression profiles based on scVI version 0.7.1.
 
 
 ## Reference
