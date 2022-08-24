@@ -2,8 +2,21 @@
 PerturbNet is a deep generative model that can predict the distribution of cell states induced by chemical or genetic perturbation. The repository contains the code for the preprint [PerturbNet predicts single-cell responses to unseen chemical and genetic perturbations](https://www.biorxiv.org/content/10.1101/2022.07.20.500854v2). 
 
 ## System Requirements and Installation
-PerturbNet works on Linux, Mac, or Windows. The key system requirements are Python (>3.7) and PyTorch (>1.7). TensorFlow (>r2.7) is required for some functionality.
+PerturbNet works on Linux, Mac, or Windows. The key system requirements are Python (>3.7) and PyTorch (>1.7). TensorFlow is required for some functionality.
 To install the package, simply install PyTorch (and TensorFlow if needed), then clone the repository. Expected installation time is about 10 minutes.
+
+Some related module versions are: 
+```
+(1) Python: python3.8-anaconda/2020.07
+(2) numpy: 1.18.5
+(3) pandas 1.0.5
+(4) scanpy: 1.8.1
+(5) tensorflow: 1.14.0 
+(6) matplotlib: 3.2.2
+(7) scvi-tools: 0.7.1
+(8) torch: 1.10.0
+(9) umap-learn: 0.4.6
+```
 
 ## Repository Structure and Usage
 
