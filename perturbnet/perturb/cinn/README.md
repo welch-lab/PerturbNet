@@ -8,11 +8,13 @@ We provide several training/evaluation examples for PerturbNet:
 
 1. `chemvae_scvi_flow_train.py` and `chemvae_scvi_flow_eval.py` are training and evaluation files of PerturbNet for sci-Plex count cellular responses to chemical perturbations. 
 
-2. `chemvae_vae_flow_train.py` and `chemvae_vae_flow_eval.py` are training and evaluation files of PerturbNet for LINCS-Drug normalized cellular responses to chemical perturbations. 
+2. `chemvae_covariates_scvi_flow_train.py` and `chemvae_covariates_scvi_flow_eval.py` are training and evaluation files of PerturbNet for sci-Plex count cellular responses to chemical perturbations adjusted for covariates of cell type and dose. 
 
-3. `genotypevae_scviBatchCorrected_flow_train.py` and `genotypevae_scviBatchCorrected_flow_eval.py` are training and evaluation files of PerturbNet with batch-correction steps for GSPS count cellular responses to genetic perturbations. 
+3. `chemvae_vae_flow_train.py` and `chemvae_vae_flow_eval.py` are training and evaluation files of PerturbNet for LINCS-Drug normalized cellular responses to chemical perturbations. 
 
-4. `esm_scvi_flow_train.py` and `esm_scvi_flow_eval.py` are training and evaluation files of PerturbNet with fixed standard deviations of perturbation representations for Ursu count cellular responses to coding variants. 
+4. `genotypevae_scviBatchCorrected_flow_train.py` and `genotypevae_scviBatchCorrected_flow_eval.py` are training and evaluation files of PerturbNet with batch-correction steps for GSPS count cellular responses to genetic perturbations. 
+
+5. `esm_scvi_flow_train.py` and `esm_scvi_flow_eval.py` are training and evaluation files of PerturbNet with fixed standard deviations of perturbation representations for Ursu count cellular responses to coding variants. 
 
 We also provid application examples of PerturbNet:
 
