@@ -28,7 +28,7 @@ Some related module versions are:
 [`./pytorch_scvi`](https://github.com/welch-lab/PerturbNet/tree/main/pytorch_scvi) contains our adapted modules to decode latent representations to expression profiles based on scVI version 0.7.1.
 
 ## Demo and Instructions for Usage
-We have provided an example dataset on Dropbox and a Jupyter notebook showing how to run PerturbNet on the example dataset in 
+We have provided example datasets on Dropbox and a Jupyter notebook showing how to run PerturbNet on the example dataset in 
 [`./examples`](https://github.com/welch-lab/PerturbNet/tree/main/examples). 
 
 ## Reference
