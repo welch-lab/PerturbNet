@@ -1,0 +1,5 @@
+exclude notebooks
+exclude example_data
+exclude pretrained_model
+include README.md
+include LICENSE
