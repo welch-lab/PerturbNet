@@ -1,35 +1,35 @@
 # PerturbNet
 
-PerturbNet is a deep generative model that can predict the distribution of cell states induced by chemical or genetic perturbation. The repository contains the code for the preprint [PerturbNet predicts single-cell responses to unseen chemical and genetic perturbations](https://www.biorxiv.org/content/10.1101/2022.07.20.500854v2). 
+PerturbNet is a deep generative model that can predict the distribution of cell states induced by chemical or genetic perturbation. The repository contains the code for the preprint [PerturbNet predicts single-cell responses to unseen chemical and genetic perturbations](https://www.biorxiv.org/content/10.1101/2022.07.20.500854v2).
+
+
 
 ## System Requirements and Installation
-PerturbNet works on Linux, Mac, or Windows. The key system requirements are Python (>3.7) and PyTorch (>1.7). TensorFlow is required for some functionality.
-To install the package, simply install PyTorch (and TensorFlow if needed), then clone the repository. Expected installation time is about 10 minutes.
 
-Some related module versions are: 
+The current version of PerturbNet requires Python 3.7. All required dependencies are listed in requirements.txt. We recommend creating a clean Conda environment using the following command:
+
 ```
-(1) Python: python3.8-anaconda/2020.07
-(2) numpy: 1.18.5
-(3) pandas 1.0.5
-(4) scanpy: 1.8.1
-(5) tensorflow: 1.14.0 
-(6) matplotlib: 3.2.2
-(7) scvi-tools: 0.7.1
-(8) torch: 1.10.0
-(9) umap-learn: 0.4.6
+conda create -n "PerturbNet" python=3.7
+```
+After setting up the environment, you can install the package by running:  
+```
+pip install PerturbNet
 ```
 
-## Repository Structure and Usage
+##  Core Repository Structure
 
-[`./net2net`](https://github.com/welch-lab/PerturbNet/tree/main/net2net) contains the conditional invertible neural network (cINN) modules in the [GitHub](https://github.com/CompVis/net2net/tree/master/net2net) repository of [Network-to-Network Translation with Conditional Invertible Neural Networks](https://arxiv.org/abs/2005.13580). 
+[`./perturbnet`](https://github.com/welch-lab/PerturbNet/tree/main/perturbnet) contains the core modules to train and benchmark the PerturbNet framework. 
 
-[`./perturbnet`](https://github.com/welch-lab/PerturbNet/tree/main/perturbnet) contains the code to train the PerturbNet framework. We provide illustrations and guidance of how to use our repository for PerturbNet
+[`./perturbnet/net2net`](https://github.com/welch-lab/PerturbNet/tree/main/net2net) contains the conditional invertible neural network (cINN) modules in the [GitHub](https://github.com/CompVis/net2net/tree/master/net2net) repository of [Network-to-Network Translation with Conditional Invertible Neural Networks](https://arxiv.org/abs/2005.13580). 
 
-[`./pytorch_scvi`](https://github.com/welch-lab/PerturbNet/tree/main/pytorch_scvi) contains our adapted modules to decode latent representations to expression profiles based on scVI version 0.7.1.
 
-## Demo and Instructions for Usage
-We have provided example datasets on Dropbox and a Jupyter notebook showing how to run PerturbNet on the example dataset in 
-[`./examples`](https://github.com/welch-lab/PerturbNet/tree/main/examples). 
+[`./perturbnet/pytorch_scvi`](https://github.com/welch-lab/PerturbNet/tree/main/pytorch_scvi) contains our adapted modules to decode latent representations to expression profiles based on scVI version 0.7.1.
+
+
+## Tutorial and Reproducibility
+The [`./notebooks`] directory contains Jupyter notebooks demonstrating how to use **PerturbNet** and includes code to reproduce the results. The required data, toy examples, and model weights can be downloaded from [Hugging Face](https://huggingface.co/cyclopeta/PerturbNet_reproduce/tree/main).
+
+
 
 ## Reference
 
