@@ -1,6 +1,7 @@
 # PerturbNet
 
-PerturbNet is a deep generative model that can predict the distribution of cell states induced by chemical or genetic perturbation. The repository contains the code for the preprint [PerturbNet predicts single-cell responses to unseen chemical and genetic perturbations](https://www.biorxiv.org/content/10.1101/2022.07.20.500854v2).
+PerturbNet is a deep generative model that can predict the distribution of cell states induced by chemical or genetic perturbation. Currently, you can refer to the preprint [PerturbNet predicts single-cell responses to unseen chemical and genetic perturbations](https://www.biorxiv.org/content/10.1101/2022.07.20.500854v2). We will submit an updated version of the paper soon.  
+
 
 
 
