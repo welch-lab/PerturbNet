@@ -6,7 +6,7 @@ PerturbNet is a deep generative model that can predict the distribution of cell 
 
 ## System Requirements and Installation
 
-The current version of PerturbNet requires Python 3.7. All required dependencies are listed in requirements.txt. We recommend creating a clean Conda environment using the following command:
+The current version of PerturbNet requires Python 3.7. All required dependencies are listed in ```requirements.txt```. We recommend creating a clean Conda environment using the following command:
 
 ```
 conda create -n "PerturbNet" python=3.7
