@@ -14,6 +14,7 @@ conda create -n "PerturbNet" python=3.7
 ```
 After setting up the environment, you can install the package by running:  
 ```
+conda activate PerturbNet
 pip install PerturbNet
 ```
 
