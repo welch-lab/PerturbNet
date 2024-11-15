@@ -30,7 +30,12 @@ pip install PerturbNet
 
 ## Tutorial and Reproducibility
 The [`./notebooks`] directory contains Jupyter notebooks demonstrating how to use **PerturbNet** and includes code to reproduce the results:  
-[Tutorial of using PerturbNet on chemcical perturbations](https://github.com/welch-lab/PerturbNet/blob/main/notebooks/Tutorial_PerturbNet_Chemicals.ipynb)  
+**Tutorials**:  
+[Tutorial on using PerturbNet on chemical perturbations](https://github.com/welch-lab/PerturbNet/blob/main/notebooks/Tutorial_PerturbNet_Chemicals.ipynb)  
+[Tutorial on using PerturbNet on genetic perturbations](https://github.com/welch-lab/PerturbNet/blob/main/notebooks/Tutorial_PerturbNet_Genetic.ipynb)  
+[Tutorial on using PerturbNet on coding variants](https://github.com/welch-lab/PerturbNet/blob/main/notebooks/Tutorial_PerturbNet_coding_variants.ipynb)
+[Tutorial on using integrated gradients to calculate feature scores for chemicals](https://github.com/welch-lab/PerturbNet/blob/main/notebooks/Integrated_gradients_example.ipynb)
+[]
 The required data, toy examples, and model weights can be downloaded from [Hugging Face](https://huggingface.co/cyclopeta/PerturbNet_reproduce/tree/main).
 
 
