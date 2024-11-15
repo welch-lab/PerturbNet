@@ -29,7 +29,9 @@ pip install PerturbNet
 
 
 ## Tutorial and Reproducibility
-The [`./notebooks`] directory contains Jupyter notebooks demonstrating how to use **PerturbNet** and includes code to reproduce the results. The required data, toy examples, and model weights can be downloaded from [Hugging Face](https://huggingface.co/cyclopeta/PerturbNet_reproduce/tree/main).
+The [`./notebooks`] directory contains Jupyter notebooks demonstrating how to use **PerturbNet** and includes code to reproduce the results:  
+[Tutorial of using PerturbNet on chemcical perturbations](https://github.com/welch-lab/PerturbNet/blob/main/notebooks/Tutorial_PerturbNet_Chemicals.ipynb)  
+The required data, toy examples, and model weights can be downloaded from [Hugging Face](https://huggingface.co/cyclopeta/PerturbNet_reproduce/tree/main).
 
 
 
