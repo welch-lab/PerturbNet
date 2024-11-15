@@ -39,7 +39,7 @@ The [`./notebooks`] directory contains Jupyter notebooks demonstrating how to us
 [Benchmark on Norman et al.](https://github.com/welch-lab/PerturbNet/blob/main/notebooks/Benchmark_Norman_Example.ipynb)  
 [Benchmark on Ursu et al.](https://github.com/welch-lab/PerturbNet/blob/main/notebooks/Benchmark_Ursu_Example.ipynb)  
 [Benchmark on Jorge et al.](https://github.com/welch-lab/PerturbNet/blob/main/notebooks/Benchmark_Jorge_Example.ipynb)  
-[Analysis of predicted novel GATA1 mutations][https://github.com/welch-lab/PerturbNet/blob/main/notebooks/GATA1_prediction_analysis.ipynb]  
+[Analysis of predicted novel GATA1 mutations](https://github.com/welch-lab/PerturbNet/blob/main/notebooks/GATA1_prediction_analysis.ipynb)  
 
 The required data, toy examples, and model weights can be downloaded from [Hugging Face](https://huggingface.co/cyclopeta/PerturbNet_reproduce/tree/main).
 
