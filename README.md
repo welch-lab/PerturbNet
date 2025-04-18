@@ -17,7 +17,7 @@ After setting up the environment, you can install the package by running:
 conda activate PerturbNet
 pip install --upgrade PerturbNet
 ```
-We used cuDNN 8.7.0 (cudnn/11.7-v8.7.0) and CUDA 11.7.1 for model training.  
+We used **cuDNN 8.7.0 (cudnn/11.7-v8.7.0)** and **CUDA 11.7.1** for model training.  
 
 We also provide an updated version that removes the dependency on TensorFlow by using Python 3.10. To install:  
 ```
