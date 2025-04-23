@@ -9,3 +9,4 @@ sphinx_autodoc_typehints>=1.12.0
 sphinx_autodoc_defaultargs==0.1.2
 nbsphinx>=0.7
 nbsphinx-link
+protobuf<=3.20
