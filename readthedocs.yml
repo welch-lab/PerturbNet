@@ -11,7 +11,8 @@ sphinx:
 
 python:
   install:
-    - requirements: requirements.txt 
-    - requirements: docs/requirements.txt
     - method: pip
       path: .
+      commands:
+        - pip install PerturbNet
+        - pip install -r docs/requirements.txt
