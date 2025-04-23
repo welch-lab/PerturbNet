@@ -18,7 +18,7 @@ with open(path.join(this_directory, 'requirements.txt'),
           encoding='utf-8') as f:
     requirements = f.read().splitlines()
     
-VERSION = "0.0.2"
+VERSION = "0.0.3"
 
 setup(  name='PerturbNet',
       version=VERSION,
