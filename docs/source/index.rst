@@ -16,7 +16,7 @@ Given a perturbation of interest—such as gene knockdown, gene overexpression, 
    api
 
 .. toctree::
-   :caption: Turtorial
+   :caption: Tutorial
    :maxdepth: 1
    :hidden:
 
