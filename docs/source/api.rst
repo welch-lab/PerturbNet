@@ -6,8 +6,11 @@ API
    :recursive:
 
    perturbnet.util
-   perturbnet.cinn
-   perturbnet.chemicalvae
-   perturbnet.genotypevae
+   perturbnet.data_vae.VAE
+   perturbnet.cinn.flow
+   perturbnet.cinn.flow_generate
+   perturbnet.cinn.FeatureAttr
+   perturbnet.chemicalvae.chemicalVAE.ChemicalVAE
+   perturbnet.genotypevae.genotypeVAE.GenotypeVAE
    perturbnet.baselines
-   perturbnet.pytorch_scvi
+   perturbnet.pytorch_scvi.scvi_generate_z.scvi_predictive_z
