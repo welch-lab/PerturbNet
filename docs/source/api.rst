@@ -50,9 +50,9 @@ Tools & Plot
    :toctree: _autosummary
    :recursive:
 
-perturbnet.util.create_train_test_splits_by_key
-perturbnet.util.prepare_embeddings_cinn
-perturbnet.util.smiles_to_hot
-perturbnet.util.contourplot_space_mapping
-perturbnet.util.Seq_to_Embed_ESM
+   perturbnet.util.create_train_test_splits_by_key
+   perturbnet.util.prepare_embeddings_cinn
+   perturbnet.util.smiles_to_hot
+   perturbnet.util.contourplot_space_mapping
+   perturbnet.util.Seq_to_Embed_ESM
 
