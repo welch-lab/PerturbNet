@@ -7,7 +7,7 @@ Cellular Representation Networks
    :toctree: _autosummary
 
 
-   perturbnet.data_vae.VAE
+   perturbnet.data_vae.vae.VAE
 
 Perturbation Representation Networks
 -------------------------------------
