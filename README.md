@@ -22,7 +22,7 @@ We also provide an updated version that removes the dependency on TensorFlow by 
 ```
 conda create -n "PerturbNet" python=3.10
 conda activate PerturbNet
-pip install pip install PerturbNet==0.0.3b1
+pip install PerturbNet==0.0.3b1
 ```
 For reproducibility, we currently recommend using the stable version with Python 3.7.
 
